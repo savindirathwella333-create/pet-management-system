@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: owner-auth-service
+          uri: ${OWNER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**,/api/owners/**
+          filters:
+            - AddRequestHeader=X-API-KEY, ${OWNER_SERVICE_API_KEY:owner-service-key-2026}
+
+        - id: pet-service
+          uri: ${PET_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/pets/**
+          filters:
+            - AddRequestHeader=X-API-KEY, ${PET_SERVICE_API_KEY:pet-service-key-2026}
+
+        - id: appointment-service
+          uri: ${APPOINTMENT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/appointments/**
+          filters:
+            - AddRequestHeader=X-API-KEY, ${APPOINTMENT_SERVICE_API_KEY:appointment-service-key-2026}
+
+        - id: medical-record-service
+          uri: ${RECORD_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/records/**
+          filters:
+            - AddRequestHeader=X-API-KEY, ${RECORD_SERVICE_API_KEY:medical-record-service-key-2026}
+
+# Must match owner-auth-service's jwt.secret exactly - tokens are validated here.
+jwt:
+  secret: ${JWT_SECRET:pet-mgmt-super-secret-key-change-in-production-2026}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway
