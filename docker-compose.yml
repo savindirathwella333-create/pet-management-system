@@ -1,0 +1,86 @@
+# Root docker-compose.yml — combine all 5 member folders into ONE repo with
+# this structure, then run the whole system with a single command:
+#
+#   pet-management-system/
+#     owner-auth-service/     (Student 1)
+#     api-gateway/            (Student 1)
+#     pet-service/            (Student 2)
+#     appointment-service/    (Student 3)
+#     medical-record-service/ (Student 4)
+#     client-app/             (shared React frontend)
+#     docker-compose.yml      (this file)
+#
+# Run:  docker compose up --build
+# Stop: docker compose down
+
+services:
+  owner-auth-service:
+    build: ./owner-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      OWNER_SERVICE_API_KEY: owner-service-key-2026
+      JWT_SECRET: pet-mgmt-super-secret-key-change-in-production-2026
+
+  pet-service:
+    build: ./pet-service
+    ports:
+      - "8082:8082"
+    environment:
+      PET_SERVICE_API_KEY: pet-service-key-2026
+      OWNER_SERVICE_URL: http://owner-auth-service:8081
+      OWNER_SERVICE_API_KEY: owner-service-key-2026
+    depends_on:
+      - owner-auth-service
+
+  appointment-service:
+    build: ./appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      APPOINTMENT_SERVICE_API_KEY: appointment-service-key-2026
+      PET_SERVICE_URL: http://pet-service:8082
+      PET_SERVICE_API_KEY: pet-service-key-2026
+    depends_on:
+      - pet-service
+
+  medical-record-service:
+    build: ./medical-record-service
+    ports:
+      - "8084:8084"
+    environment:
+      RECORD_SERVICE_API_KEY: medical-record-service-key-2026
+      APPOINTMENT_SERVICE_URL: http://appointment-service:8083
+      APPOINTMENT_SERVICE_API_KEY: appointment-service-key-2026
+    depends_on:
+      - appointment-service
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: pet-mgmt-super-secret-key-change-in-production-2026
+      OWNER_SERVICE_URL: http://owner-auth-service:8081
+      OWNER_SERVICE_API_KEY: owner-service-key-2026
+      PET_SERVICE_URL: http://pet-service:8082
+      PET_SERVICE_API_KEY: pet-service-key-2026
+      APPOINTMENT_SERVICE_URL: http://appointment-service:8083
+      APPOINTMENT_SERVICE_API_KEY: appointment-service-key-2026
+      RECORD_SERVICE_URL: http://medical-record-service:8084
+      RECORD_SERVICE_API_KEY: medical-record-service-key-2026
+    depends_on:
+      - owner-auth-service
+      - pet-service
+      - appointment-service
+      - medical-record-service
+
+  client-app:
+    build:
+      context: ./client-app
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
