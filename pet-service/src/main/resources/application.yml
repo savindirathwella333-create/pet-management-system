@@ -1,0 +1,36 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: pet-service
+  datasource:
+    url: jdbc:h2:mem:petdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Key the API Gateway must send as X-API-KEY on every proxied request.
+api:
+  key: ${PET_SERVICE_API_KEY:pet-service-key-2026}
+
+# owner-auth-service connection details, used for direct service-to-service
+# validation of ownerId (see client/OwnerClient.java)
+owner-service:
+  base-url: ${OWNER_SERVICE_URL:http://localhost:8081}
+  api-key: ${OWNER_SERVICE_API_KEY:owner-service-key-2026}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
